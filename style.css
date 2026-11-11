@@ -1,156 +1,203 @@
-html,body {
+/* =========================================================
+   БАЗА
+   ========================================================= */
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   scrollbar-width: none;
-  overflow-x: hidden;
+  background: #fff;
 }
 
+/* =========================================================
+   АДАПТИВНОСТЬ
+   Вся сцена нарисована на «холсте» 860×620 px и целиком
+   масштабируется под экран одним свойством `scale`.
+   scale = min(ширина, высота*860/620, 1376px) / 860px
+   (tan(atan2(a, b)) = a / b — деление длин в «чистое» число).
+   Работает при любой ориентации и размере, без JS.
+   ========================================================= */
+.stage {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 860px;
+  height: 620px;
+  translate: -50% -50%;
+  scale: 0.45; /* запасное значение для очень старых браузеров */
+  scale: tan(atan2(min(108vw, 96dvh * 860 / 620, 1376px), 860px));
+}
+
+/* сдвигаем исходные координаты (сцена начиналась ~x500, y60) в угол холста */
+.laptop-main-wrapper {
+  position: absolute;
+  left: -505px;
+  top: -60px;
+  width: 0;
+  height: 0;
+}
+
+/* =========================================================
+   ПРИНЦИП АНИМАЦИЙ
+   В базовом стиле — КОНЕЧНОЕ состояние, а анимация задаёт только
+   `from` и работает с fill-mode: backwards. После окончания
+   анимация снимается, и браузер освобождает GPU-слой
+   (раньше `forwards` + opacity:0 держали слои вечно).
+   ========================================================= */
+
+/* ---------- НИЖНЯЯ ПАНЕЛЬ ---------- */
 .laptop-bottom-panel {
   width: 350px;
   height: 200px;
   background: linear-gradient(90deg, #3d065f, #5f27bd);
-  justify-self: center;
-  border-top: 1px solid #ccc;
   border: 6px solid #290f52;
   border-radius: 20px;
   position: absolute;
+  left: 539px; /* раньше: justify-self:center при окне 1440px → (1440-362)/2 */
   z-index: 100;
-  box-shadow: 4px 10px 0 rgb(60, 23, 95), 10px 20px 0 #B592D9;
+  box-shadow: 4px 10px 0 rgb(60, 23, 95), 10px 20px 0 #b592d9;
   transform: translateY(380px) translateX(265px) rotateX(25deg) rotateZ(25deg);
-  transform-style: preserve-3d;
-  animation: laptop-bottom-panel 1s ease-in-out forwards;
+  animation: laptop-bottom-panel 1s ease-in-out backwards;
 }
 
 @keyframes laptop-bottom-panel {
   from {
-  transform: translateY(300px) translateX(265px) rotateX(25deg) rotateZ(25deg); 
-  opacity: 0;
-  } 
-  to {
-    opacity: 1;
+    transform: translateY(300px) translateX(265px) rotateX(25deg) rotateZ(25deg);
+    opacity: 0;
   }
 }
 
+/* ---------- ВЕРХНЯЯ ПАНЕЛЬ (экран) ---------- */
 .laptop-top-panel {
   width: 440px;
   height: 200px;
   background: linear-gradient(335.1deg, #2a0c5c 3.62%, #5f27bd 68.17%, #b4299a 97.16%);
-  justify-self: center;
-  border-top: 1px solid #ccc;
   border: 10px solid #290f52;
   border-radius: 20px;
   position: absolute;
+  left: 490px; /* (1440-460)/2 */
   z-index: 100;
-  box-shadow: 4px -4px 0px #000;  
+  box-shadow: 4px -4px 0 #000;
   transform: translateX(305px) translateY(190px) rotateX(25deg) rotateY(45deg);
-  transform-style: preserve-3d;
-  animation: laptop-top-panel 1s ease-in-out forwards;
-  opacity: 0;
+  animation: laptop-top-panel 1s ease-in-out backwards;
 }
 
 @keyframes laptop-top-panel {
   from {
-  transform: translateX(305px) translateY(220px) rotateX(25deg) rotateY(45deg);
+    transform: translateX(305px) translateY(220px) rotateX(25deg) rotateY(45deg);
+    opacity: 0;
   }
-  to {
-    opacity: 1;
-  }
+}
+
+/* ---------- БЛИКИ (сияющие индикаторы) ----------
+   Светлое ядро → горячий розовый → мягкое затухание, выходящее за края
+   панели. Многоступенчатый градиент без blend-режимов (дёшево для GPU),
+   плюс лёгкое «дыхание» только через transform/opacity. */
+.laptop-bottom-panel-shine,
+.laptop-top-panel-shine {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle closest-side,
+    rgba(255, 238, 255, 0.95) 0%,
+    rgba(255, 110, 235, 0.92) 9%,
+    rgba(255, 60, 220, 0.75) 20%,
+    rgba(232, 50, 205, 0.48) 34%,
+    rgba(205, 50, 195, 0.26) 50%,
+    rgba(185, 70, 205, 0.1) 70%,
+    rgba(180, 90, 210, 0.03) 88%,
+    rgba(180, 90, 210, 0) 100%
+  );
+  pointer-events: none;
+  animation: shine-pulse 3.6s ease-in-out infinite;
 }
 
 .laptop-bottom-panel-shine {
-    background: radial-gradient(50% 49.71% at 50.04% 58.03%, #972a74 0, #8a266a 4%, #601b4a 19%, #3d112f 35%, #230a1b00 0%, #0f040c00 67%, #04010300 83%);
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    right: -45px;
-    bottom: -49px;
-    background-blend-mode: color-dodge;
-    mix-blend-mode: color-dodge;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
+  right: -62px;
+  bottom: -72px;
+  animation-delay: -1.8s;
 }
 
 .laptop-top-panel-shine {
-    background: radial-gradient(50% 49.71% at 50.04% 58.03%, #972a74 0, #8a266a 4%, #601b4a 19%, #3d112f 35%, #230a1b00 0%, #0f040c00 67%, #04010300 83%);
-    background-blend-mode: color-dodge;
-    mix-blend-mode: color-dodge;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    top: -40px;
-    position: absolute;
-    left: -40px;
+  top: -55px;
+  left: -58px;
 }
 
+@keyframes shine-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(0.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+/* ---------- КЛАВИАТУРА ---------- */
 .laptop-bottom-panel__keyboard {
-      background: linear-gradient(13.47deg, #2f0847 795.72%, #10054d 10150.27%);
-    border-radius: 10px;
-    display: grid;
-    gap: 4px;
-    grid-template-columns: repeat(13, 1fr);
-    grid-template-rows: 5px;
-    padding: 2.5%;
-    height: 100px;
-    bottom: -30px;
-    position: relative;
-    width: 300px;
-    justify-self: center;
-    z-index: 200;
-    animation: laptop-bottom-panel-keyboard 1s ease-in-out forwards;
-    animation-delay: 0.5s;
-    opacity: 0;
+  background: linear-gradient(13.47deg, #2f0847 795.72%, #10054d 10150.27%);
+  border-radius: 10px;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(13, 1fr);
+  grid-template-rows: 5px;
+  padding: 2.5%;
+  height: 100px;
+  bottom: -30px;
+  position: relative;
+  width: 300px;
+  margin-inline: auto;
+  z-index: 200;
+  animation: laptop-bottom-panel-keyboard 1s ease-in-out 0.5s backwards;
 }
 
 @keyframes laptop-bottom-panel-keyboard {
   from {
     opacity: 0;
-    transform: translate3d(-100px,-100px,0);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(-100px, -100px, 0);
   }
 }
 
+/* Клавиши: одна общая анимация, задержка считается из --i (его задаёт
+   скрипт в index.html). Вместо 64 отдельных правил nth-child. */
 .laptop-bottom-panel__key {
   background-color: #6a3689;
   border-radius: 3px;
-  box-shadow: 1px 2px 0px #8a58a5;
+  box-shadow: 1px 2px 0 #8a58a5;
   border: none;
   z-index: 200;
   position: relative;
-  cursor: default;
-  pointer-events: none;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  animation: laptop-bottom-panel__key 0.6s ease-out backwards;
+  animation-delay: calc(0.5s + var(--i, 0) * 45ms);
 }
-
- 
 
 @keyframes laptop-bottom-panel__key {
   from {
-    transform: translate3d(-100px,-100px,0);
-  }
-  to {
-    opacity: 1;
-    pointer-events: auto;
-    cursor: pointer;
+    opacity: 0;
+    transform: translate3d(-100px, -100px, 0);
   }
 }
 
 .laptop-bottom-panel__key:active {
-  box-shadow: 0 0px 10px #f9f9f9;
+  box-shadow: 0 0 10px #f9f9f9;
 }
 
-@media(max-width: 768px) {
+/* hover только там, где он действительно есть (не на тач-экранах) */
+@media (hover: hover) {
   .laptop-bottom-panel__key:hover {
-    background-color: #6a3689 !important;
+    background-color: #f9f9f9;
   }
-}
-
-.laptop-bottom-panel__key:hover {
-  background-color: #f9f9f9;
 }
 
 .laptop-bottom-panel__key.laptop-bottom-panel__key--3 {
@@ -158,44 +205,45 @@ html,body {
 }
 
 .laptop-bottom-panel__key:nth-child(24),
+.laptop-bottom-panel__key:nth-child(25),
 .laptop-bottom-panel__key:nth-child(46) {
-  grid-column: span 2;
-}
-
-.laptop-bottom-panel__key:nth-child(25) {
   grid-column: span 2;
 }
 
 .laptop-bottom-panel__key:nth-child(37) {
   grid-column: span 3;
 }
+
 .laptop-bottom-panel__key:nth-child(47) {
   grid-column: span 4;
 }
+
 .laptop-bottom-panel__key:nth-child(60) {
   grid-column: span 7;
 }
+
 .laptop-bottom-panel__key:nth-child(57) {
   width: 25px;
 }
 
+/* ---------- UML-ДИАГРАММА ---------- */
 .uml-diagram {
-  opacity: 0;
-  animation: diagram 1.5s forwards;
-  transform: scale(1.2);
+  position: relative;
+  z-index: -1;
+  animation: diagram 1.5s ease backwards;
 }
 
 @keyframes diagram {
-  to {
-    opacity: 1;
-    transform: scale(1);
+  from {
+    opacity: 0;
+    transform: scale(1.2);
   }
 }
 
 .uml-diagram__ellipse--top {
   width: 22%;
   height: 25px;
-  background: hsla(16, 80%, 75%, .8);
+  background: hsla(16, 80%, 75%, 0.8);
   border-radius: 25px;
   position: relative;
   top: -30px;
@@ -218,7 +266,10 @@ html,body {
   justify-content: center;
 }
 
-.uml-diagram__direction-arrow--top::after {
+.uml-diagram__direction-arrow--top::after,
+.uml-diagram__direction-arrow--left::after,
+.uml-diagram__direction-arrow--right::after,
+.uml-diagram__direction-arrow--bottom::after {
   content: "";
   width: 0;
   height: 0;
@@ -230,8 +281,12 @@ html,body {
   transform: rotate(180deg);
 }
 
-.uml-diagram__ellipse--top:hover {
-  transform: scale(1.05);
+.uml-diagram__direction-arrow--left::after {
+  right: 1px;
+}
+
+.uml-diagram__direction-arrow--bottom::after {
+  left: -0.5px;
 }
 
 .uml-diagram__rhombus {
@@ -241,14 +296,14 @@ html,body {
   position: relative;
   left: 14.3%;
   top: -17px;
-  background: hsla(16, 80%, 75%, .8);
+  background: hsla(16, 80%, 75%, 0.8);
   font-size: 35px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  color: white;
+  color: #fff;
   transition: 0.3s ease;
 }
 
@@ -273,19 +328,6 @@ html,body {
   justify-content: center;
 }
 
-.uml-diagram__direction-arrow--left::after {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 10px solid #b086cc;
-  position: relative;
-  top: 9.5px;
-  right: 1px;
-  transform: rotate(180deg);
-}
-
 .uml-diagram__direction-line--top-right {
   width: 8%;
   height: 2.5px;
@@ -307,39 +349,20 @@ html,body {
   justify-content: center;
 }
 
-.uml-diagram__direction-arrow--right::after {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 10px solid #b086cc;
-  position: relative;
-  top: 9.5px;
-  transform: rotate(180deg);
-}
-
 .uml-diagram__rectangle--left {
   width: 20%;
   height: 25px;
-  background: hsla(16, 80%, 75%, .8);
+  background: hsla(16, 80%, 75%, 0.8);
   left: -5%;
   top: -53px;
   position: relative;
   transition: 0.3s ease;
 }
 
-.uml-diagram__rectangle--left:hover,
-.uml-diagram__rectangle--right:hover,
-.uml-diagram__rhombus:hover,
-.uml-diagram__ellipse--bottom:hover {
-  transform: scale(1.05);
-}
-
 .uml-diagram__rectangle--right {
   width: 20%;
   height: 25px;
-  background: hsla(16, 80%, 75%, .8);
+  background: hsla(16, 80%, 75%, 0.8);
   right: -34%;
   top: -78px;
   position: relative;
@@ -373,11 +396,6 @@ html,body {
   left: 196.5px;
 }
 
-.uml-diagram {
-  z-index: -1;
-  position: relative;
-}
-
 .uml-diagram__direction-arrow--bottom {
   width: 2.5px;
   height: 20px;
@@ -390,23 +408,10 @@ html,body {
   justify-content: center;
 }
 
-.uml-diagram__direction-arrow--bottom::after {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 10px solid #b086cc;
-  position: relative;
-  top: 9.5px;
-  left: -0.5px;
-  transform: rotate(180deg);
-}
-
 .uml-diagram__ellipse--bottom {
   width: 22%;
   height: 20px;
-  background: hsla(16, 80%, 75%, .8);
+  background: hsla(16, 80%, 75%, 0.8);
   border-radius: 25px;
   position: relative;
   top: -82px;
@@ -414,89 +419,112 @@ html,body {
   transition: 0.3s ease;
 }
 
-.scroll-effect--visible .byte-code:nth-child(6) {
-    --delay: 1.5s;
+@media (hover: hover) {
+  .uml-diagram__ellipse--top:hover,
+  .uml-diagram__rectangle--left:hover,
+  .uml-diagram__rectangle--right:hover,
+  .uml-diagram__rhombus:hover,
+  .uml-diagram__ellipse--bottom:hover {
+    transform: scale(1.05);
+  }
 }
-.dom-is-ready .scroll-effect .byte-code {
-    transition-duration: 2s, 1.4s;
-}
-.scroll-effect--visible .byte-code {
-    opacity: 1;
-    transform: rotate(35deg) skew(35deg, -5deg);
-    transition-delay: var(--delay);
-    visibility: visible;
-}
-.scroll-effect .byte-code {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    opacity: 0;
-    transform: rotate(35deg) skew(35deg, -5deg) translate3d(0, -100px, 0);
-    transition-property: opacity, transform;
-    transition-timing-function: ease;
-    visibility: hidden;
-}
+
+/* ---------- БИНАРНЫЙ КОД ---------- */
 .byte-code {
-    color: #6422c9;
-    display: grid;
-    font-weight: 900;
-    font-size: 30px;
-    gap: 4px 2px;
-    grid-template-columns: repeat(7, 1fr);
-    line-height: 1;
-    position: absolute;
-    overflow: hidden;
-    top: 0px;
-    top: 12%;
-    right: 0;
-    right: 40px;
-    pointer-events: none;
-}  
+  color: #6422c9;
+  display: grid;
+  font-weight: 900;
+  font-size: 30px;
+  gap: 4px 2px;
+  grid-template-columns: repeat(7, 1fr);
+  line-height: 1;
+  position: absolute;
+  overflow: hidden;
+  top: 12%;
+  right: 40px;
+  pointer-events: none;
+}
+
+.byte-code__char {
+  pointer-events: auto; /* родитель без событий, ловят только сами цифры */
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+  animation: byte-code__char 0.6s ease-out backwards;
+  animation-delay: calc(3s + var(--i, 0) * 60ms);
+}
+
+@media (hover: hover) {
+  .byte-code__char:hover {
+    color: #f9f9f9;
+    text-shadow: 0 0 8px #e08bff, 0 0 18px #b04cff;
+    transform: scale(1.2);
+  }
+}
+
+.byte-code__char:active {
+  color: #fff;
+  text-shadow: 0 0 12px #fff, 0 0 24px #e08bff;
+  transform: scale(1.3);
+}
 
 @keyframes byte-code__char {
   from {
-    transform: translate3d(100px,0,0);
+    opacity: 0;
+    transform: translate3d(100px, 0, 0);
   }
-  to {
-    opacity: 1;
-    pointer-events: auto;
-  }
+}
+
+/* ---------- ПЛАВАЮЩИЕ ЗНАЧКИ ---------- */
+.code-signs {
+  position: absolute;
+  height: 0;
+  pointer-events: none;
 }
 
 .code-signs__sign {
   width: fit-content;
+  height: fit-content;
   font-size: 50px;
   font-weight: 900;
-  height: fit-content;
   color: #651ab1;
-  opacity: .6;
+  opacity: 0.6;
   line-height: 1;
-}
-
-.code-signs__sign--tag {
-  position: relative;
-  top: -250px;
-  left: -100px;
-}
-
-.code-signs__sign--left:after {
-    animation: move-to-left 5s linear infinite;
-    background: linear-gradient(-90deg, #45108a, rgba(69, 16, 138, 0));
-    right: 0;
-}
-
-.code-signs__sign--right:after {
-    animation: move-to-right 5s linear infinite;
-    background: linear-gradient(90deg, #45108a, rgba(69, 16, 138, 0));
-    left: 0;
 }
 
 .code-signs__sign--left,
 .code-signs__sign--right {
-  animation: code-signs-opacity 3s forwards ease;
+  animation: code-signs-opacity 3s ease backwards;
+}
+
+/* Светящийся «хвост». Раньше: mix-blend-mode + background-blend-mode: screen
+   в бесконечной анимации — постоянная перерисовка каждый кадр.
+   Теперь только transform + opacity (идёт на GPU, без перерисовки). */
+.code-signs__sign:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 200%;
+  height: 100%;
+  opacity: 0.8;
+  z-index: -1;
+}
+
+.code-signs__sign--left:after {
+  animation: move-to-left 5s linear infinite;
+  background: linear-gradient(-90deg, #45108a, rgba(69, 16, 138, 0));
+  right: 0;
+}
+
+.code-signs__sign--right:after {
+  animation: move-to-right 5s linear infinite;
+  background: linear-gradient(90deg, #45108a, rgba(69, 16, 138, 0));
+  left: 0;
 }
 
 @keyframes code-signs-opacity {
-  0% {
+  from {
     opacity: 0;
   }
 }
@@ -510,10 +538,10 @@ html,body {
     opacity: 1;
   }
   50% {
-    opacity: .4;
+    opacity: 0.4;
   }
   75% {
-    opacity: .1111;
+    opacity: 0.1111;
   }
   100% {
     transform: translateX(60%);
@@ -530,10 +558,10 @@ html,body {
     opacity: 1;
   }
   50% {
-    opacity: .4;
+    opacity: 0.4;
   }
   75% {
-    opacity: .1111;
+    opacity: 0.1111;
   }
   100% {
     transform: translateX(-60%);
@@ -541,16 +569,10 @@ html,body {
   }
 }
 
-.code-signs__sign:after {
-    background-blend-mode: screen;
-    content: "";
-    height: 100%;
-    mix-blend-mode: screen;
-    opacity: .8;
-    position: absolute;
-    top: 0;
-    width: 200%;
-    z-index: -1;
+.code-signs__sign--tag {
+  position: relative;
+  top: -250px;
+  left: -100px;
 }
 
 .code-signs__sign--html {
@@ -580,18 +602,12 @@ html,body {
   left: 430px;
 }
 
-.code-signs {
-  position: absolute;
-  height: 0;
-  pointer-events: none;
-}
-
 .code-signs__sign--stars {
   position: relative;
   top: -400px;
   right: 200px;
   font-weight: 900;
-  animation: code-signs-opacity 3s forwards ease;
+  animation: code-signs-opacity 3s ease backwards;
 }
 
 .code-signs__sign--triangles {
@@ -601,20 +617,25 @@ html,body {
   gap: 10px;
   display: flex;
   align-items: center;
-  animation: code-signs-opacity 3s forwards ease;
+  animation: code-signs-opacity 3s ease backwards;
 }
 
 .code-signs__sign--triangles:after {
   content: "}";
   position: absolute;
   left: 10px;
+  width: auto;
+  height: auto;
+  background: none;
+  opacity: 1;
+  z-index: auto;
 }
 
 .code-signs__sign--triangles:before {
   content: "{";
   right: 210px;
   position: relative;
-} 
+}
 
 .code-signs__triangle {
   width: 0;
@@ -628,137 +649,124 @@ html,body {
   transform: rotate(90deg);
 }
 
-.icon-gear {
-  position: relative;
-  width: 30px;
-  height: 30px;
-}
-
-.code-signs__sign--gear {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 5px 0px;
-  top: -350px;
-  right: 220px;
-}
-
-.code-signs__sign--search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 5px 0px;
-  top: -270px;
-  right: 170px;
-}
-
-.icon-search {
-  position: relative;
-  width: 30px;
-  height: 30px;
-}
-
-.code-signs__sign--idea {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 5px 0px;
-  top: -710px;
-  right: -500px;
-}
-
-.icon-idea {
-  position: relative;
-  width: 30px;
-  height: 30px;
-}
-
-.code-signs__sign--shield {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 5px 0px;
-  top: -650px;
-  right: -500px;
-}
-
+.icon-gear,
+.icon-search,
+.icon-idea,
 .icon-shield {
   position: relative;
   width: 30px;
   height: 30px;
 }
 
+.code-signs__sign--gear,
+.code-signs__sign--search,
+.code-signs__sign--idea,
+.code-signs__sign--shield {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.code-signs__sign--gear {
+  top: -350px;
+  right: 220px;
+}
+
+.code-signs__sign--search {
+  top: -270px;
+  right: 170px;
+}
+
+.code-signs__sign--idea {
+  top: -710px;
+  right: -500px;
+}
+
+.code-signs__sign--shield {
+  top: -650px;
+  right: -500px;
+}
+
+/* ---------- ПАНЕЛЬ С «КОДОМ» ---------- */
 .code-panel {
-    background: linear-gradient(165.08deg, rgba(73, 116, 201, .64) -10.2%, rgba(98, 71, 202, .64) 49.62%, rgba(108, 35, 182, .64) 113.6%);
-    border: 1px solid rgba(205, 106, 232, .8);
-    border-bottom: none;
-    border-left: none;
-    border-radius: 15px;
-    display: grid;
-    gap: 2px 5px;
-    grid-template-columns: repeat(12, 10px);
-    height: 200px;
-    width: 200px;
-    overflow: hidden;
-    padding: 2.5% 3%;
-    pointer-events: none;
-    position: absolute;
-    top: 60%;
-    left: -40%;
-    justify-content: center;
-    align-items: center;
-    animation: code-panel 1s ease-in-out forwards;
-    animation-delay: 1.5s;
-    opacity: 0;
+  background: linear-gradient(
+    165.08deg,
+    rgba(73, 116, 201, 0.64) -10.2%,
+    rgba(98, 71, 202, 0.64) 49.62%,
+    rgba(108, 35, 182, 0.64) 113.6%
+  );
+  border: 1px solid rgba(205, 106, 232, 0.8);
+  border-bottom: none;
+  border-left: none;
+  border-radius: 15px;
+  display: grid;
+  gap: 2px 5px;
+  grid-template-columns: repeat(12, 10px);
+  height: 200px;
+  width: 200px;
+  overflow: hidden;
+  padding: 2.5% 3%;
+  pointer-events: none;
+  position: absolute;
+  top: 60%;
+  left: -40%;
+  justify-content: center;
+  align-items: center;
+  animation: code-panel 1s ease-in-out 1.5s backwards;
 }
 
 @keyframes code-panel {
   from {
     transform: scale(0);
-  }
-  to {
-    opacity: 1;
+    opacity: 0;
   }
 }
 
-.code-panel__word--yellow-color:first-child {
-    background: #fd7949 !important;  
-    width: 50px !important;
+/* Строки «кода». Раньше: 116 штук с mix-blend-mode: color-dodge
+   и will-change: transform (= 116 отдельных GPU-слоёв + 116 блендов).
+   Теперь обычные непрозрачные цвета (подобраны под прежний вид),
+   без blend и без will-change. */
+.code-panel__word {
+  grid-column: span 1;
+  height: 3px;
+  background: #6931c5;
+  transform-origin: 0 50%;
+  animation: code-panel__word 0.6s ease-in-out backwards;
+  animation-delay: calc(2.5s + var(--i, 0) * 40ms);
+}
+
+@keyframes code-panel__word {
+  from {
+    opacity: 0;
+    transform: translate3d(100px, 0, 0);
+  }
+}
+
+.code-panel__word--2 {
+  grid-column: span 2;
+}
+
+.code-panel__word--4 {
+  grid-column: span 2 !important;
+}
+
+.code-panel__word--bright-color {
+  background: #be5ae0;
+  grid-column: span 2 !important;
 }
 
 .code-panel__word--yellow-color {
   grid-column: span 4 !important;
-  background: #afbe0f !important;
+  background: #e0e68a !important;
 }
 
-.code-panel__word {
-    --columns: 1;
-    background: linear-gradient(90deg, #3d065f 34880%, #5f27bd 35227%);
-    background-blend-mode: color-dodge;
-    grid-column-start: span 1; 
-    grid-column-end: auto;
-    height: 3px;
-    mix-blend-mode: color-dodge;
-    transform-origin: 0 50%;
-    will-change: transform;
-    animation: code-panel__word 0.75s forwards ease-in-out;
-    opacity: 0;
+.code-panel__word--yellow-color:first-child {
+  background: #fe82bd !important;
+  width: 50px !important;
 }
 
-.code-panel__word--4 {
-    --columns: 4;
-    grid-column: span 2 !important;
-}
-
-.code-panel__word--bright-color {
-    background: rgba(159, 25, 171, .5);
-    grid-column: span 2 !important;
-}
-
-.code-panel__word--2 {
-    --columns: 2;
-}
-
+/* «пробелы» между строками кода */
 .code-panel__word:nth-child(2),
 .code-panel__word:nth-child(9),
 .code-panel__word:nth-child(10),
@@ -795,17 +803,8 @@ html,body {
 .code-panel__word:nth-child(110),
 .code-panel__word:nth-child(111),
 .code-panel__word:nth-child(112),
-.code-panel__word:nth-child(113){
-    background: transparent !important;
-}
-
-@keyframes code-panel__word {
-  from {
-    transform: translate3d(100px,0,0);
-  }
-  to {
-    opacity: 1;
-  }
+.code-panel__word:nth-child(113) {
+  background: transparent !important;
 }
 
 .prnt-text {
@@ -813,76 +812,14 @@ html,body {
   width: 50px;
 }
 
-/* ============================================================
-   === РЕФАКТОРИНГ: адаптив + производительность (заменяет ~180
-   строк :nth-child с задержками — задержки теперь через --i) ===
-   ============================================================ */
-
-/* --- Сцена: масштабируем весь «ноутбук» целиком --- */
-.stage {
-  width: 100%;
-  min-height: calc(680px * var(--scale, 1));
-  display: flex;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.laptop-main-wrapper {
-  position: relative;
-  width: 1280px;               /* базовый «макетный» размер, см. BASE_W в JS */
-  height: 680px;               /* BASE_H */
-  flex: 0 0 auto;
-  transform: scale(var(--scale, 1));
-  transform-origin: top center;
-}
-
-/* --- Каскадные задержки через CSS-переменную --i (ставится из JS) --- */
-.laptop-bottom-panel__key {
-  opacity: 0;
-  animation: laptop-bottom-panel__key 0.75s forwards;
-  animation-delay: calc(0.5s + var(--i, 0) * 0.035s);
-}
-
-.byte-code__char {
-  display: inline-block; /* чтобы transform анимирался, а не ломал layout */
-  opacity: 0;
-  animation: byte-code__char 0.75s forwards;
-  animation-delay: calc(3s + var(--i, 0) * 0.06s);
-}
-
-.code-panel__word {
-  animation-delay: calc(2.5s + var(--i, 0) * 0.05s);
-}
-
-/* --- Мобильные устройства: убираем самое тяжёлое --- */
-@media (max-width: 768px), (pointer: coarse) {
-  /* box-shadow с большим радиусом рисуется очень дорого на телефонах */
-  .laptop-bottom-panel,
-  .laptop-top-panel {
-    box-shadow: none;
-  }
-  /* mix-blend-mode заставляет браузер мешать пиксели каждый кадр */
-  .laptop-bottom-panel-shine,
-  .laptop-top-panel-shine {
-    display: none;
-  }
-  /* бесконечные градиентные «шлейфы» у code-signs — постоянная перерисовка */
-  .code-signs__sign--left::after,
-  .code-signs__sign--right::after {
-    display: none;
-    animation: none;
-  }
-  /* 116 анимированных полосок кода на экране 360px не читаются —
-     если хочешь оставить, просто удали эти две строки */
-  .code-panel {
-    display: none;
-  }
-}
-
-/* --- Уважение к настройке «уменьшить движение» --- */
+/* =========================================================
+   Уважаем настройку «уменьшить движение»: сразу конечный кадр
+   ========================================================= */
 @media (prefers-reduced-motion: reduce) {
-  .laptop-main-wrapper * {
-    animation-duration: 0.01s !important;
-    animation-delay: 0s !important;
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
