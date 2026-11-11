@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Laptop</title>
     <link rel="stylesheet" href="style.css">
-<base target="_blank">
 </head>
 <body>
     
-    <div class="stage">
+    <main class="stage" aria-hidden="true">
     <div class="laptop-main-wrapper">
         <div class="laptop-bottom-panel">
                 <div class="laptop-bottom-panel__keyboard">
@@ -85,7 +84,7 @@
         <div class="uml-diagram">
             <div class="uml-diagram__ellipse--top"></div>
             <div class="uml-diagram__direction-arrow--top"></div>
-            <div class="uml-diagram__rhombus"><\></div>
+            <div class="uml-diagram__rhombus">&lt;\&gt;</div>
             <div class="uml-diagram__direction-arrow--left"></div>
             <div class="uml-diagram__direction-line--top-left"></div>
             <div class="uml-diagram__direction-line--top-right"></div>
@@ -136,7 +135,7 @@
             <span class="byte-code__char">1</span>
         </div>
         <div class="code-signs">
-            <div class="code-signs__sign code-signs__sign--left code-signs__sign--tag"><\></div>
+            <div class="code-signs__sign code-signs__sign--left code-signs__sign--tag">&lt;\&gt;</div>
             <div class="code-signs__sign code-signs__sign--left code-signs__sign--html">HTML</div>
             <div class="code-signs__sign code-signs__sign--right code-signs__sign--react">React</div>
             <div class="code-signs__sign code-signs__sign--right code-signs__sign--css">CSS</div>   
@@ -290,11 +289,12 @@
             </div>
         </div>
     </div>
-    </div>
+    </main>
+
 
 
     <!-- 1. Подключение библиотеки (через CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script> -->
 
 <!-- 2. HTML-структура -->
 <!-- <div class="prnt-text">
@@ -372,23 +372,16 @@ document.addEventListener("DOMContentLoaded", function () {
 }  /*примера текстового фона лично от меня */
 </style> -->
 
-<script>
-/* Адаптив: весь ноутбук свёрстан под BASE_W × BASE_H (см. .stage в CSS).
-   На экранах меньше базовой ширины масштабируем его целиком — внутренние
-   пиксельные координаты трогать не нужно. */
-const stage = document.querySelector('.stage');
-const BASE_W = 1280, BASE_H = 680;
-function fitStage() {
-  const s = Math.min(1, stage.clientWidth / BASE_W);
-  stage.style.setProperty('--scale', s);
-  stage.style.minHeight = (BASE_H * s) + 'px';
-}
-addEventListener('resize', fitStage);
-fitStage();
-
-/* Каскадные задержки анимаций через --i вместо ~180 правил :nth-child */
-document.querySelectorAll('.laptop-bottom-panel__key, .byte-code__char, .code-panel__word')
-  .forEach((el, i) => el.style.setProperty('--i', i));
-</script>
+    <script>
+    // Порядковый номер каждого элемента → CSS считает задержку анимации
+    // через var(--i) (вместо ~200 отдельных nth-child правил)
+    document.querySelectorAll(
+      '.laptop-bottom-panel__keyboard, .byte-code, .code-panel'
+    ).forEach(function (box) {
+      Array.prototype.forEach.call(box.children, function (el, i) {
+        el.style.setProperty('--i', i);
+      });
+    });
+    </script>
 </body>
 </html>
