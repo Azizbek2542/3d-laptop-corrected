@@ -114,7 +114,7 @@ body {
     rgba(180, 90, 210, 0) 100%
   );
   pointer-events: none;
-  animation: shine-pulse 3.6s ease-in-out infinite;
+  animation: shine-in 1s ease 1s backwards, shine-pulse 3.6s ease-in-out 2s infinite;
 }
 
 .laptop-bottom-panel-shine {
@@ -126,6 +126,16 @@ body {
 .laptop-top-panel-shine {
   top: -55px;
   left: -58px;
+}
+
+@keyframes shine-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    transform: scale(0.86);
+    opacity: 0.85;
+  }
 }
 
 @keyframes shine-pulse {
